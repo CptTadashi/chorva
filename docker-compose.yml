@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: chorva_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres_password}
+      POSTGRES_DB: ${POSTGRES_DB:-chorva_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - chorva_network
+
+  minio:
+    image: minio/minio
+    container_name: chorva_minio
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-admin123}
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - chorva_network
+
+  api:
+    build: ./backend
+    container_name: chorva_api
+    restart: always
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    depends_on:
+      - db
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres_password}@db:5432/${POSTGRES_DB:-chorva_db}
+    volumes:
+      - ./backend/media:/app/media
+    networks:
+      - chorva_network
+
+  bot:
+    build: ./backend
+    container_name: chorva_bot
+    restart: always
+    command: python -m app.bot.main
+    depends_on:
+      - api
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres_password}@db:5432/${POSTGRES_DB:-chorva_db}
+      API_URL: http://api:8000/api
+    volumes:
+      - ./backend/media:/app/media
+    networks:
+      - chorva_network
+
+  frontend:
+    build: ./frontend
+    container_name: chorva_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    networks:
+      - chorva_network
+
+networks:
+  chorva_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  minio_data:

@@ -1,0 +1,17 @@
+﻿.env
+.env.*
+venv/
+node_modules/
+__pycache__/
+*.pyc
+dist/
+build/
+chorva.db
+*.sqlite
+*.sqlite3
+.idea/
+.vscode/
+.DS_Store
+backend/venv/
+backend/__pycache__/
+backend/media/
