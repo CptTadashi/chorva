@@ -7,6 +7,7 @@ from app.core.database import get_db
 from app.models.user import AdminUser
 from app.schemas.admin_mgmt import AdminUserRead, AdminUserCreate, AdminPasswordUpdate
 from app.api.deps import get_superadmin, get_current_admin
+from app.core.security import get_password_hash
 
 router = APIRouter()
 
@@ -31,7 +32,7 @@ async def create_moderator(
         
     new_admin = AdminUser(
         username=data.username,
-        password_hash=data.password, # MVP'da o'z holatida saqlaymiz
+        password_hash=get_password_hash(data.password),
         role=data.role,
         is_active=True
     )
@@ -72,6 +73,6 @@ async def update_staff_password(
     if requester.role != "superadmin" and requester.id != admin_id:
         raise HTTPException(status_code=403, detail="Ruxsat berilmagan")
         
-    target.password_hash = data.new_password
+    target.password_hash = get_password_hash(data.new_password)
     await db.commit()
     return {"message": "Parol muvaffaqiyatli yangilandi"}
