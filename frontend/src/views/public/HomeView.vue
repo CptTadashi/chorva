@@ -25,8 +25,14 @@ const fetchAds = async (isLoadMore = false) => {
     if (filterState.selectedCategory) params.category_id = filterState.selectedCategory;
     if (filterState.selectedRegion) params.region_id = filterState.selectedRegion;
     
+    console.log("--- DEBUG: HomeView FETCH ---");
+    console.log("Params:", params);
+    
     const response = await api.get('/public/ads', { params });
     const newAds = response.data;
+    
+    console.log("Response data length:", newAds.length);
+    console.log("Response data:", newAds);
     
     if (isLoadMore) {
       ads.value = [...ads.value, ...newAds];

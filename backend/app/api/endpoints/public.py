@@ -9,6 +9,8 @@ from app.models.category import Category
 from app.models.location import Region, District
 from app.schemas.category import CategoryRead
 from app.schemas.location import RegionRead, DistrictRead
+from app.models.ad import Ad
+from app.schemas.ad import AdRead
 
 router = APIRouter()
 
@@ -26,9 +28,6 @@ async def read_regions(db: AsyncSession = Depends(get_db)):
 async def read_districts(region_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(District).where(District.region_id == region_id).order_by(District.sort_order))
     return result.scalars().all()
-from sqlalchemy.orm import selectinload
-from app.models.ad import Ad
-from app.schemas.ad import AdRead
 
 @router.get("/ads", response_model=List[AdRead])
 async def read_public_ads(
@@ -47,12 +46,20 @@ async def read_public_ads(
     if region_id:
         stmt = stmt.where(Ad.region_id == region_id)
         
-    # Ko'proq moslashuvchanlik uchun: published_at bo'sh bo'lsa created_at bo'yicha saralaymiz
-    stmt = stmt.order_by(func.coalesce(Ad.published_at, Ad.created_at).desc())
+    # DEBUG: Saralashni vaqtincha ID bo'yicha qilamiz
+    stmt = stmt.order_by(Ad.id.desc())
     
     stmt = stmt.offset((page - 1) * limit).limit(limit)
     result = await db.execute(stmt)
-    return result.scalars().all()
+    ads = result.scalars().all()
+    
+    print(f"--- DEBUG: PUBLIC ADS LOG ---")
+    print(f"Params: cat={category_id}, reg={region_id}, page={page}")
+    print(f"Found items: {len(ads)}")
+    for a in ads:
+        print(f" - Ad #{a.id}: {a.title} ({a.status})")
+    
+    return ads
 
 @router.get("/ads/{ad_id}", response_model=AdRead)
 async def read_public_ad(ad_id: int, db: AsyncSession = Depends(get_db)):
