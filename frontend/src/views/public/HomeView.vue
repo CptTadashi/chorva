@@ -91,7 +91,7 @@ onMounted(() => {
         <div class="ad-image-container">
           <img 
             v-if="ad.media_files && ad.media_files.length" 
-            :src="'/' + ad.media_files[0].file_path" 
+            :src="ad.media_files[0].file_path.startsWith('http') ? ad.media_files[0].file_path : '/' + ad.media_files[0].file_path.replace(/^\/+/, '')" 
             :alt="ad.title"
             class="ad-image"
             loading="lazy"
@@ -102,12 +102,15 @@ onMounted(() => {
           <div class="ad-badge">{{ ad.category?.name }}</div>
         </div>
         <div class="ad-info">
+          <h3 class="ad-title">{{ ad.title }}</h3>
           <div class="ad-meta">
-            <span class="ad-location">📍 {{ ad.region?.name }}, {{ ad.district?.name }}</span>
+            <span class="ad-location">📍 {{ ad.region?.name }}</span>
             <span class="ad-date" v-if="ad.published_at">{{ new Date(ad.published_at).toLocaleDateString() }}</span>
           </div>
-          <h3 class="ad-title">{{ ad.title }}</h3>
-          <p class="ad-price">{{ ad.price ? Number(ad.price).toLocaleString() + " so'm" : 'Kelishiladi' }}</p>
+          <div class="ad-price-row">
+            <p class="ad-price">{{ ad.price ? Number(ad.price).toLocaleString() + " so'm" : 'Kelishiladi' }}</p>
+            <span class="view-btn">Ko'rish</span>
+          </div>
         </div>
       </router-link>
     </section>
@@ -282,28 +285,54 @@ onMounted(() => {
 }
 
 .ad-info {
-  padding: 1.8rem;
+  padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.ad-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  height: 3.1rem;
 }
 
 .ad-meta {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-size: 0.85rem;
   color: var(--text-secondary);
-  margin-bottom: 1rem;
 }
 
-.ad-title {
-  font-size: 1.4rem;
-  font-weight: 700;
-  margin-bottom: 1.2rem;
-  color: var(--text-primary);
+.ad-price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.5rem;
 }
 
 .ad-price {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: 800;
   color: var(--accent-primary);
+  margin: 0;
+}
+
+.view-btn {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent-primary);
+  padding: 0.4rem 0.8rem;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: 8px;
 }
 
 .load-more-container {

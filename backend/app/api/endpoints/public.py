@@ -46,20 +46,12 @@ async def read_public_ads(
     if region_id:
         stmt = stmt.where(Ad.region_id == region_id)
         
-    # DEBUG: Saralashni vaqtincha ID bo'yicha qilamiz
-    stmt = stmt.order_by(Ad.id.desc())
+    # Published_at bo'sh bo'lsa created_at bo'yicha saralaymiz
+    stmt = stmt.order_by(func.coalesce(Ad.published_at, Ad.created_at).desc())
     
     stmt = stmt.offset((page - 1) * limit).limit(limit)
     result = await db.execute(stmt)
-    ads = result.scalars().all()
-    
-    print(f"--- DEBUG: PUBLIC ADS LOG ---")
-    print(f"Params: cat={category_id}, reg={region_id}, page={page}")
-    print(f"Found items: {len(ads)}")
-    for a in ads:
-        print(f" - Ad #{a.id}: {a.title} ({a.status})")
-    
-    return ads
+    return result.scalars().all()
 
 @router.get("/ads/{ad_id}", response_model=AdRead)
 async def read_public_ad(ad_id: int, db: AsyncSession = Depends(get_db)):

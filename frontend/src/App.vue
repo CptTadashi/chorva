@@ -73,9 +73,7 @@ onMounted(() => {
 
     <main class="main-content">
       <router-view v-slot="{ Component }">
-        <transition name="fade" mode="out-in">
-          <component :is="Component" />
-        </transition>
+        <component :is="Component" />
       </router-view>
     </main>
 
@@ -301,9 +299,9 @@ body {
 }
 
 .main-content {
-  margin-top: 100px;
+  margin-top: 80px; /* Biroz kamaytirildi */
   flex: 1;
-  padding: 1rem 2rem;
+  padding: 1.5rem 1rem;
   max-width: 1400px;
   width: 100%;
   margin-left: auto;
