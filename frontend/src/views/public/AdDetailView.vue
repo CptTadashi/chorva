@@ -10,24 +10,13 @@ const loading = ref(true);
 const fetchAd = async () => {
   loading.value = true;
   const adId = route.params.id;
-  
+
   try {
-    // 1. Ommaviy API'dan olishga harakat qilamiz
     const response = await api.get(`/public/ads/${adId}`);
     ad.value = response.data;
   } catch (error) {
-    // 2. Agar ommaviy API 404 bersa va bizda admin token bo'lsa, admin API'dan ko'ramiz
-    const isAdmin = !!localStorage.getItem('admin_token');
-    if (isAdmin) {
-      try {
-        const adminRes = await api.get(`/admin/ads/${adId}`);
-        ad.value = adminRes.data;
-      } catch (adminErr) {
-        console.error("Admin API'dan yuklashda xato:", adminErr);
-      }
-    } else {
-      console.error("E'lonni yuklashda xato:", error);
-    }
+    console.error("E'lonni yuklashda xato:", error);
+    ad.value = null;
   } finally {
     loading.value = false;
   }
