@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 from typing import List
 
 from app.core.database import get_db
@@ -46,7 +47,10 @@ async def read_public_ads(
     if region_id:
         stmt = stmt.where(Ad.region_id == region_id)
         
-    stmt = stmt.order_by(Ad.published_at.desc()).offset((page - 1) * limit).limit(limit)
+    # Ko'proq moslashuvchanlik uchun: published_at bo'sh bo'lsa created_at bo'yicha saralaymiz
+    stmt = stmt.order_by(func.coalesce(Ad.published_at, Ad.created_at).desc())
+    
+    stmt = stmt.offset((page - 1) * limit).limit(limit)
     result = await db.execute(stmt)
     return result.scalars().all()
 

@@ -8,11 +8,26 @@ const ad = ref(null);
 const loading = ref(true);
 
 const fetchAd = async () => {
+  loading.value = true;
+  const adId = route.params.id;
+  
   try {
-    const response = await api.get(`/public/ads/${route.params.id}`);
+    // 1. Ommaviy API'dan olishga harakat qilamiz
+    const response = await api.get(`/public/ads/${adId}`);
     ad.value = response.data;
   } catch (error) {
-    console.error("E'lonni yuklashda xato:", error);
+    // 2. Agar ommaviy API 404 bersa va bizda admin token bo'lsa, admin API'dan ko'ramiz
+    const isAdmin = !!localStorage.getItem('admin_token');
+    if (isAdmin) {
+      try {
+        const adminRes = await api.get(`/admin/ads/${adId}`);
+        ad.value = adminRes.data;
+      } catch (adminErr) {
+        console.error("Admin API'dan yuklashda xato:", adminErr);
+      }
+    } else {
+      console.error("E'lonni yuklashda xato:", error);
+    }
   } finally {
     loading.value = false;
   }
